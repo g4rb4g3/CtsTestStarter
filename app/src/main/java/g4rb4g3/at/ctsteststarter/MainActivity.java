@@ -17,10 +17,12 @@ import android.os.Looper;
 import android.os.Message;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.ListView;
+import android.widget.GridView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import static g4rb4g3.at.ctsteststarter.KeyInterceptorService.SHOW_MESSAGE;
@@ -31,7 +33,7 @@ public class MainActivity extends Activity {
   private PackageManager mPackageManager = null;
   private List<ApplicationInfo> mApplist = null;
   private ApplicationAdapter mListAdapter = null;
-  private ListView mLvAppList;
+  private GridView mGvAppList;
   private AlertDialog mAlertDialog;
 
   private Handler mHandler = new Handler(Looper.getMainLooper()) {
@@ -69,17 +71,16 @@ public class MainActivity extends Activity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
+    setTitle(getString(R.string.app_name_version, BuildConfig.VERSION_NAME));
 
     mPackageManager = getPackageManager();
 
-    mLvAppList = findViewById(R.id.lv_all_apps);
-    mLvAppList.setOnItemClickListener((parent, view, position, id) -> {
+    mGvAppList = findViewById(R.id.gv_all_apps);
+    mGvAppList.setOnItemClickListener((parent, view, position, id) -> {
       ApplicationInfo applicationInfo = mApplist.get(position);
-      String appLabel = applicationInfo.loadLabel(mPackageManager).toString();
-      applicationInfo.name = appLabel;
       mAlertDialog = new AlertDialog.Builder(this)
           .setTitle(R.string.next_step)
-          .setMessage(getString(R.string.long_press_to_map_app, appLabel))
+          .setMessage(getString(R.string.long_press_to_map_app, applicationInfo.name))
           .setNegativeButton(R.string.cancel, (dialog, which) -> mService.cancel())
           .setCancelable(false)
           .create();
@@ -87,7 +88,7 @@ public class MainActivity extends Activity {
       mService.mapAppToKey(applicationInfo);
     });
 
-    mLvAppList.setOnItemLongClickListener((parent, view, position, id) -> {
+    mGvAppList.setOnItemLongClickListener((parent, view, position, id) -> {
       String packageName = mApplist.get(position).packageName;
       startActivity(mPackageManager.getLaunchIntentForPackage(packageName));
       return true;
@@ -170,7 +171,7 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onPostExecute(Void result) {
-      mLvAppList.setAdapter(mListAdapter);
+      mGvAppList.setAdapter(mListAdapter);
       progress.dismiss();
       super.onPostExecute(result);
     }
@@ -192,6 +193,8 @@ public class MainActivity extends Activity {
       for (ApplicationInfo info : list) {
         try {
           if (!ownPackageName.equals(info.packageName) && mPackageManager.getLaunchIntentForPackage(info.packageName) != null) {
+            String appLabel = info.loadLabel(mPackageManager).toString();
+            info.name = appLabel;
             applist.add(info);
           }
         } catch (Exception e) {
@@ -199,6 +202,7 @@ public class MainActivity extends Activity {
         }
       }
 
+      Collections.sort(applist, (o1, o2) -> o1.name.toLowerCase().compareTo(o2.name.toLowerCase()));
       return applist;
     }
   }

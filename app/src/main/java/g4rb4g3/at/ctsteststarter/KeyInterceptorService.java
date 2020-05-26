@@ -49,7 +49,7 @@ public class KeyInterceptorService extends Service {
       if (keyEvent.getKeyCode() == KeyEvent.KEYCODE_SETTINGS) {
         if (!mActivityVisible) {
           startActivity(new Intent(mContext, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
-        } else if(mMapBackKey || mClearKeyMapping || mNextAppMappingApplicationInfo != null) {
+        } else if (mMapBackKey || mClearKeyMapping || mNextAppMappingApplicationInfo != null) {
           notifyHandlers(SHOW_MESSAGE, getString(R.string.settings_cannot_be_mapped));
           cancel();
         }

@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">CtsTestStarter</string>
+    <string name="app_name_version">CtsTestStarter %1$s</string>
     <string name="map_key">Map key</string>
     <string name="app_description">Choose application from list and long press key to map application to key.\nLong press settings button while mapping to abort it.\nLong press list item to launch it.</string>
     <string name="clear_mapping">Clear mapping</string>
