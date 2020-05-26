@@ -1,3 +1,20 @@
 <resources>
     <string name="app_name">CtsTestStarter</string>
+    <string name="map_key">Map key</string>
+    <string name="app_description">Choose application from list and long press key to map application to key.\nLong press settings button while mapping to abort it.\nLong press list item to launch it.</string>
+    <string name="clear_mapping">Clear mapping</string>
+    <string name="map_back_key">Map back key</string>
+    <string name="how_to">How-To</string>
+    <string name="ok">Ok</string>
+    <string name="cancel">Cancel</string>
+    <string name="long_press_to_map_app">Long press key to map application \"%1$s\".</string>
+    <string name="long_press_clear_mapping">Long press key to clear mapping.</string>
+    <string name="long_press_map_back">Long press key to map back key.</string>
+    <string name="loading_applist">Loading application info...</string>
+    <string name="next_step">Next step</string>
+    <string name="mapping_app_completed">Mapped keycode %1$d to application %2$s</string>
+    <string name="mapping_app_aborted">Mapping app %1$s aborted."</string>
+    <string name="mapping_cleared">Mapping for keycode %1$d cleared.</string>
+    <string name="mapping_back_completed">Mapped keycode %1$d on back key.</string>
+    <string name="settings_cannot_be_mapped">Settings button can\'t be mapped.</string>
 </resources>

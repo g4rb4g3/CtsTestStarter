@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/mi_howto"
+        android:showAsAction="always"
+        android:title="@string/how_to" />
+    <item
+        android:id="@+id/mi_map_back_key"
+        android:showAsAction="ifRoom"
+        android:title="@string/map_back_key" />
+    <item
+        android:id="@+id/mi_clear_mapping"
+        android:showAsAction="ifRoom"
+        android:title="@string/clear_mapping" />
+</menu>
