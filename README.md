@@ -8,7 +8,7 @@ Allows you to map hardware keys to custom apps. <br />
 
 ![Screenshot](doc/screenshot.png)
 
-Long press settings button to launch app.
+Long press settings button to launch app.<br />
 After installing the app press the settings button shortly and long press it afterwards to launch the app.
 
 If you like my work I'd be happy if you buy me a coffee. Thanks!<br  />
