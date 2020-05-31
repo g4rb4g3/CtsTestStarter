@@ -7,6 +7,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.AsyncTask;
@@ -29,7 +30,9 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
+import static g4rb4g3.at.ctsteststarter.KeyInterceptorService.PREFERENCES_NAME;
 import static g4rb4g3.at.ctsteststarter.KeyInterceptorService.SHOW_MESSAGE;
 
 public class MainActivity extends Activity {
@@ -126,6 +129,15 @@ public class MainActivity extends Activity {
                     ExtMediaService.getInstance().excute("pm uninstall " + applicationInfo.packageName, null);
                     mApplist.remove(position);
                     mListAdapter.notifyDataSetChanged();
+
+                    SharedPreferences sharedPreferences = getSharedPreferences(PREFERENCES_NAME, MODE_PRIVATE);
+                    Map<String, ?> allEntries = sharedPreferences.getAll();
+                    for(Map.Entry<String, ?> entry : allEntries.entrySet()) {
+                      if(applicationInfo.packageName.equals(entry.getValue().toString())) {
+                        sharedPreferences.edit().remove(entry.getKey()).commit();
+                        break;
+                      }
+                    }
                   } catch (RemoteException e) {
                     Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
                   }
