@@ -15,14 +15,19 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
+import android.os.RemoteException;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.ViewConfiguration;
+import android.widget.ArrayAdapter;
 import android.widget.GridView;
 import android.widget.Toast;
 
+import com.lge.ivi.server.ExtMediaService;
+
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 import static g4rb4g3.at.ctsteststarter.KeyInterceptorService.SHOW_MESSAGE;
@@ -31,10 +36,11 @@ public class MainActivity extends Activity {
   private boolean mBound = false;
   private KeyInterceptorService mService;
   private PackageManager mPackageManager = null;
-  private List<ApplicationInfo> mApplist = null;
+  private List<LaunchableApplicationInfo> mApplist = null;
   private ApplicationAdapter mListAdapter = null;
   private GridView mGvAppList;
   private AlertDialog mAlertDialog;
+  private boolean mShowAllApps = false;
 
   private Handler mHandler = new Handler(Looper.getMainLooper()) {
     @Override
@@ -75,8 +81,15 @@ public class MainActivity extends Activity {
 
     mPackageManager = getPackageManager();
 
+    enableDotsMenu();
+
     mGvAppList = findViewById(R.id.gv_all_apps);
     mGvAppList.setOnItemClickListener((parent, view, position, id) -> {
+      LaunchableApplicationInfo info = mApplist.get(position);
+      if (!info.isLaunchable) {
+        Toast.makeText(this, R.string.not_assignable, Toast.LENGTH_SHORT).show();
+        return;
+      }
       ApplicationInfo applicationInfo = mApplist.get(position);
       mAlertDialog = new AlertDialog.Builder(this)
           .setTitle(R.string.next_step)
@@ -89,10 +102,60 @@ public class MainActivity extends Activity {
     });
 
     mGvAppList.setOnItemLongClickListener((parent, view, position, id) -> {
-      String packageName = mApplist.get(position).packageName;
-      startActivity(mPackageManager.getLaunchIntentForPackage(packageName));
+      LaunchableApplicationInfo applicationInfo = mApplist.get(position);
+      if ((applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0) {
+        final ArrayAdapter<String> items = new ArrayAdapter<>(this, android.R.layout.simple_selectable_list_item);
+        if (applicationInfo.isLaunchable) {
+          items.addAll(getString(R.string.launch), getString(R.string.uninstall));
+        } else {
+          items.add(getString(R.string.uninstall));
+        }
+        new AlertDialog.Builder(this)
+            .setTitle(applicationInfo.name)
+            .setNegativeButton(R.string.cancel, (dialog, which) -> dialog.dismiss())
+            .setAdapter(items, (dialog, which) -> {
+              if (items.getCount() == 1) {
+                which = 1;
+              }
+              switch (which) {
+                case 0:
+                  startActivity(mPackageManager.getLaunchIntentForPackage(applicationInfo.packageName));
+                  break;
+                case 1:
+                  try {
+                    ExtMediaService.getInstance().excute("pm uninstall " + applicationInfo.packageName, null);
+                    mApplist.remove(position);
+                    mListAdapter.notifyDataSetChanged();
+                  } catch (RemoteException e) {
+                    Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                  }
+                  break;
+              }
+            })
+            .show();
+      } else {
+        if (applicationInfo.isLaunchable) {
+          startActivity(mPackageManager.getLaunchIntentForPackage(applicationInfo.packageName));
+        } else {
+          Toast.makeText(getApplicationContext(), R.string.not_launchable, Toast.LENGTH_SHORT).show();
+        }
+      }
       return true;
     });
+  }
+
+  private void enableDotsMenu() {
+    try {
+      ViewConfiguration config = ViewConfiguration.get(this);
+      Field menuKeyField = ViewConfiguration.class.getDeclaredField("sHasPermanentMenuKey");
+
+      if (menuKeyField != null) {
+        menuKeyField.setAccessible(true);
+        menuKeyField.setBoolean(config, false);
+      }
+    } catch (Exception e) {
+      Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
+    }
   }
 
   @Override
@@ -138,6 +201,11 @@ public class MainActivity extends Activity {
             .setMessage(R.string.app_description)
             .setPositiveButton(R.string.ok, (dialog, which) -> dialog.dismiss())
             .show();
+        break;
+      case R.id.mi_show_all_apps:
+        item.setChecked(!item.isChecked());
+        mShowAllApps = item.isChecked();
+        new LoadApplications().execute();
         break;
     }
     return true;
@@ -187,15 +255,19 @@ public class MainActivity extends Activity {
       super.onProgressUpdate(values);
     }
 
-    private List<ApplicationInfo> checkForLaunchIntent(List<ApplicationInfo> list) {
+    private List<LaunchableApplicationInfo> checkForLaunchIntent(List<ApplicationInfo> list) {
       String ownPackageName = getPackageName();
-      ArrayList<ApplicationInfo> applist = new ArrayList<>();
+      ArrayList<LaunchableApplicationInfo> applist = new ArrayList<>();
       for (ApplicationInfo info : list) {
         try {
-          if (!ownPackageName.equals(info.packageName) && mPackageManager.getLaunchIntentForPackage(info.packageName) != null) {
-            String appLabel = info.loadLabel(mPackageManager).toString();
-            info.name = appLabel;
-            applist.add(info);
+          if (!ownPackageName.equals(info.packageName)) {
+            LaunchableApplicationInfo applicationInfo = new LaunchableApplicationInfo(info, mPackageManager.getLaunchIntentForPackage(info.packageName) != null);
+            if (!mShowAllApps && !applicationInfo.isLaunchable) {
+              continue;
+            }
+            String appLabel = applicationInfo.loadLabel(mPackageManager).toString();
+            applicationInfo.name = appLabel == null ? "" : appLabel;
+            applist.add(applicationInfo);
           }
         } catch (Exception e) {
           e.printStackTrace();

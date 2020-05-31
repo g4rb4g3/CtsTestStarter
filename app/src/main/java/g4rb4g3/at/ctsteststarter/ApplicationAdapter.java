@@ -12,12 +12,12 @@ import android.widget.TextView;
 
 import java.util.List;
 
-public class ApplicationAdapter extends ArrayAdapter<ApplicationInfo> {
-  private List<ApplicationInfo> mAppsList = null;
+public class ApplicationAdapter extends ArrayAdapter<LaunchableApplicationInfo> {
+  private List<LaunchableApplicationInfo> mAppsList = null;
   private Context mContext;
   private PackageManager mPackageManager;
 
-  public ApplicationAdapter(Context context, int textViewResourceId, List<ApplicationInfo> appsList) {
+  public ApplicationAdapter(Context context, int textViewResourceId, List<LaunchableApplicationInfo> appsList) {
     super(context, textViewResourceId, appsList);
     mContext = context;
     mAppsList = appsList;
@@ -30,7 +30,7 @@ public class ApplicationAdapter extends ArrayAdapter<ApplicationInfo> {
   }
 
   @Override
-  public ApplicationInfo getItem(int position) {
+  public LaunchableApplicationInfo getItem(int position) {
     return ((mAppsList != null) ? mAppsList.get(position) : null);
   }
 

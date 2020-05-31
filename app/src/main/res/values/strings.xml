@@ -18,4 +18,9 @@
     <string name="mapping_cleared">Mapping for keycode %1$d cleared.</string>
     <string name="mapping_back_completed">Mapped keycode %1$d on back key.</string>
     <string name="settings_cannot_be_mapped">Settings button can\'t be mapped.</string>
+    <string name="launch">Launch</string>
+    <string name="uninstall">Uninstall</string>
+    <string name="show_all_apps">Show all apps</string>
+    <string name="not_assignable">App is not assignable since it has no launch intent.</string>
+    <string name="not_launchable">App can not be started since it has no launch intent.</string>
 </resources>
