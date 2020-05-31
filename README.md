@@ -8,8 +8,10 @@ Allows you to map hardware keys to custom apps. <br />
 
 ![Screenshot](doc/screenshot.png)
 
-Long press settings button to launch app.<br />
+Long press settings button to launch app or uninstall it.<br />
 After installing the app press the settings button shortly and long press it afterwards to launch the app.
+
+![Screenshot](doc/long_press_options.png)
 
 If you like my work I'd be happy if you buy me a coffee. Thanks!<br  />
 [![](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=RT8WTFDGMLFPG)
