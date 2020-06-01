@@ -17,7 +17,6 @@ import android.widget.Toast;
 import com.lge.ivi.IKeyInterceptor;
 import com.lge.ivi.IKeyService;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -201,10 +200,9 @@ public class KeyInterceptorService extends Service {
 
   private void injectKeyEvent(int keyCode) {
     try {
-      String keyCommand = "input keyevent " + keyCode;
-      Runtime runtime = Runtime.getRuntime();
-      runtime.exec(keyCommand);
-    } catch (IOException e) {
+      String keyCommand = "input keyevent " + keyCode + " > /dev/null 2> /dev/null < /dev/null &";
+      ProcessExecutor.executeRootCommand(keyCommand);
+    } catch (RemoteException e) {
       e.printStackTrace();
     }
   }
