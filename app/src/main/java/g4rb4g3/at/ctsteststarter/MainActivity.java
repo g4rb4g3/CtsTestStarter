@@ -24,11 +24,10 @@ import android.widget.ArrayAdapter;
 import android.widget.GridView;
 import android.widget.Toast;
 
-import com.lge.ivi.server.ExtMediaService;
-
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -44,6 +43,8 @@ public class MainActivity extends Activity {
   private GridView mGvAppList;
   private AlertDialog mAlertDialog;
   private boolean mShowAllApps = false;
+
+  private Map<String, Integer> contextOptions = new HashMap<>();
 
   private Handler mHandler = new Handler(Looper.getMainLooper()) {
     @Override
@@ -89,71 +90,15 @@ public class MainActivity extends Activity {
     mGvAppList = findViewById(R.id.gv_all_apps);
     mGvAppList.setOnItemClickListener((parent, view, position, id) -> {
       LaunchableApplicationInfo info = mApplist.get(position);
-      if (!info.isLaunchable) {
-        Toast.makeText(this, R.string.not_assignable, Toast.LENGTH_SHORT).show();
-        return;
-      }
-      ApplicationInfo applicationInfo = mApplist.get(position);
-      mAlertDialog = new AlertDialog.Builder(this)
-          .setTitle(R.string.next_step)
-          .setMessage(getString(R.string.long_press_to_map_app, applicationInfo.name))
-          .setNegativeButton(R.string.cancel, (dialog, which) -> mService.cancel())
-          .setCancelable(false)
-          .create();
-      mAlertDialog.show();
-      mService.mapAppToKey(applicationInfo);
+      showAppOptions(info, position);
     });
 
-    mGvAppList.setOnItemLongClickListener((parent, view, position, id) -> {
-      LaunchableApplicationInfo applicationInfo = mApplist.get(position);
-      if ((applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0) {
-        final ArrayAdapter<String> items = new ArrayAdapter<>(this, android.R.layout.simple_selectable_list_item);
-        if (applicationInfo.isLaunchable) {
-          items.addAll(getString(R.string.launch), getString(R.string.uninstall));
-        } else {
-          items.add(getString(R.string.uninstall));
-        }
-        new AlertDialog.Builder(this)
-            .setTitle(applicationInfo.name)
-            .setNegativeButton(R.string.cancel, (dialog, which) -> dialog.dismiss())
-            .setAdapter(items, (dialog, which) -> {
-              if (items.getCount() == 1) {
-                which = 1;
-              }
-              switch (which) {
-                case 0:
-                  startActivity(mPackageManager.getLaunchIntentForPackage(applicationInfo.packageName));
-                  break;
-                case 1:
-                  try {
-                    ExtMediaService.getInstance().excute("pm uninstall " + applicationInfo.packageName, null);
-                    mApplist.remove(position);
-                    mListAdapter.notifyDataSetChanged();
-
-                    SharedPreferences sharedPreferences = getSharedPreferences(PREFERENCES_NAME, MODE_PRIVATE);
-                    Map<String, ?> allEntries = sharedPreferences.getAll();
-                    for(Map.Entry<String, ?> entry : allEntries.entrySet()) {
-                      if(applicationInfo.packageName.equals(entry.getValue().toString())) {
-                        sharedPreferences.edit().remove(entry.getKey()).commit();
-                        break;
-                      }
-                    }
-                  } catch (RemoteException e) {
-                    Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-                  }
-                  break;
-              }
-            })
-            .show();
-      } else {
-        if (applicationInfo.isLaunchable) {
-          startActivity(mPackageManager.getLaunchIntentForPackage(applicationInfo.packageName));
-        } else {
-          Toast.makeText(getApplicationContext(), R.string.not_launchable, Toast.LENGTH_SHORT).show();
-        }
-      }
-      return true;
-    });
+    contextOptions.put(getString(R.string.launch), R.string.launch);
+    contextOptions.put(getString(R.string.clear_cache), R.string.clear_cache);
+    contextOptions.put(getString(R.string.clear_data), R.string.clear_data);
+    contextOptions.put(getString(R.string.uninstall), R.string.uninstall);
+    contextOptions.put(getString(R.string.force_stop), R.string.force_stop);
+    contextOptions.put(getString(R.string.map_key), R.string.map_key);
   }
 
   private void enableDotsMenu() {
@@ -207,13 +152,6 @@ public class MainActivity extends Activity {
         mAlertDialog.show();
         mService.mapBackKey();
         break;
-      case R.id.mi_howto:
-        new AlertDialog.Builder(this)
-            .setTitle(R.string.how_to)
-            .setMessage(R.string.app_description)
-            .setPositiveButton(R.string.ok, (dialog, which) -> dialog.dismiss())
-            .show();
-        break;
       case R.id.mi_show_all_apps:
         item.setChecked(!item.isChecked());
         mShowAllApps = item.isChecked();
@@ -234,6 +172,93 @@ public class MainActivity extends Activity {
     }
     if (mAlertDialog != null && mAlertDialog.isShowing()) {
       mAlertDialog.dismiss();
+    }
+  }
+
+  private void mapAppToKey(final LaunchableApplicationInfo info) {
+    if (!info.isLaunchable) {
+      Toast.makeText(this, R.string.not_assignable, Toast.LENGTH_SHORT).show();
+      return;
+    }
+    mAlertDialog = new AlertDialog.Builder(this)
+        .setTitle(R.string.next_step)
+        .setMessage(getString(R.string.long_press_to_map_app, info.name))
+        .setNegativeButton(R.string.cancel, (dialog, which) -> mService.cancel())
+        .setCancelable(false)
+        .create();
+    mAlertDialog.show();
+    mService.mapAppToKey(info);
+  }
+
+  private void showAppOptions(final LaunchableApplicationInfo info, final int position) {
+    final ArrayAdapter<String> items = new ArrayAdapter<>(this, android.R.layout.simple_selectable_list_item);
+    if (info.isLaunchable) {
+      items.addAll(getString(R.string.map_key), getString(R.string.launch));
+    }
+    items.addAll(getString(R.string.clear_cache), getString(R.string.clear_data), getString(R.string.force_stop));
+    if (!info.isSystemApp) {
+      items.add(getString(R.string.uninstall));
+    }
+    new AlertDialog.Builder(this)
+        .setTitle(info.name)
+        .setNegativeButton(R.string.cancel, (dialog, which) -> dialog.dismiss())
+        .setAdapter(items, (dialog, which) -> {
+          switch (contextOptions.get(items.getItem(which))) {
+            case R.string.launch:
+              startActivity(mPackageManager.getLaunchIntentForPackage(info.packageName));
+              break;
+            case R.string.uninstall:
+              try {
+                ProcessExecutor.executeRootCommand("pm uninstall " + info.packageName);
+                mApplist.remove(position);
+                mListAdapter.notifyDataSetChanged();
+
+                SharedPreferences sharedPreferences = getSharedPreferences(PREFERENCES_NAME, MODE_PRIVATE);
+                Map<String, ?> allEntries = sharedPreferences.getAll();
+                for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
+                  if (info.packageName.equals(entry.getValue().toString())) {
+                    sharedPreferences.edit().remove(entry.getKey()).commit();
+                    break;
+                  }
+                }
+              } catch (RemoteException e) {
+                Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+              }
+              break;
+            case R.string.clear_cache:
+              try {
+                ProcessExecutor.executeRootCommand("rm -rf /data/data/" + info.packageName + "/cache/*");
+              } catch (RemoteException e) {
+                Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+              }
+              break;
+            case R.string.clear_data:
+              try {
+                killAppIfRunning(info.packageName);
+                ProcessExecutor.executeRootCommand("rm -rf /data/data/" + info.packageName + "/*");
+              } catch (RemoteException e) {
+                Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+              }
+              break;
+            case R.string.force_stop:
+              try {
+                killAppIfRunning(info.packageName);
+              } catch (RemoteException e) {
+                Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+              }
+              break;
+            case R.string.map_key:
+              mapAppToKey(info);
+              break;
+          }
+        })
+        .show();
+  }
+
+  private void killAppIfRunning(String packageName) throws RemoteException {
+    String pid = ProcessExecutor.execute("/system/bin/sh", "-c", "ps | grep " + packageName + " | busybox awk '{print $2}'");
+    if (pid != null) {
+      ProcessExecutor.executeRootCommand("kill " + pid);
     }
   }
 

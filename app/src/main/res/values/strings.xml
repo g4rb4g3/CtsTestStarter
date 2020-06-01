@@ -1,8 +1,7 @@
 <resources>
-    <string name="app_name">CtsTestStarter</string>
-    <string name="app_name_version">CtsTestStarter %1$s</string>
+    <string name="app_name">App Manager</string>
+    <string name="app_name_version">App Manager %1$s</string>
     <string name="map_key">Map key</string>
-    <string name="app_description">Choose application from list and long press key to map application to key.\nLong press list item to launch it.</string>
     <string name="clear_mapping">Clear mapping</string>
     <string name="map_back_key">Map back key</string>
     <string name="how_to">How-To</string>
@@ -22,5 +21,7 @@
     <string name="uninstall">Uninstall</string>
     <string name="show_all_apps">Show all apps</string>
     <string name="not_assignable">App is not assignable since it has no launch intent.</string>
-    <string name="not_launchable">App can not be started since it has no launch intent.</string>
+    <string name="clear_cache">Clear cache</string>
+    <string name="clear_data">Clear data</string>
+    <string name="force_stop">Force stop</string>
 </resources>
