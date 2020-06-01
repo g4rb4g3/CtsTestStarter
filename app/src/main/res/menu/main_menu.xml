@@ -4,6 +4,11 @@
         android:id="@+id/mi_map_back_key"
         android:showAsAction="always"
         android:title="@string/map_back_key" />
+
+    <item
+        android:id="@+id/mi_map_recents"
+        android:showAsAction="always"
+        android:title="@string/map_recent_apps" />
     <item
         android:id="@+id/mi_clear_mapping"
         android:showAsAction="always"

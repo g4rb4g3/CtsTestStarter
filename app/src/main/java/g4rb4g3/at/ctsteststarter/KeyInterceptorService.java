@@ -37,6 +37,7 @@ public class KeyInterceptorService extends Service {
   private boolean mClearKeyMapping = false;
   private boolean mActivityVisible = false;
   private boolean mMapBackKey = false;
+  private boolean mMapRecentApps = false;
   private Context mContext;
 
   private IKeyInterceptor.Stub mKeyInterceptor = new IKeyInterceptor.Stub() {
@@ -77,16 +78,28 @@ public class KeyInterceptorService extends Service {
         return true;
       }
 
-      String packageName = mSharedPreferences.getString(String.valueOf(keyEvent.getKeyCode()), null);
-      if (packageName != null) {
-        if ("back_key".equals(packageName)) {
-          injectKeyEvent(KeyEvent.KEYCODE_BACK);
-        } else {
-          mContext.startActivity(mContext.getPackageManager().getLaunchIntentForPackage(packageName));
-        }
+      if (mMapRecentApps) {
+        mSharedPreferences.edit().putString(String.valueOf(keyEvent.getKeyCode()), "recent_apps").commit();
+        notifyHandlers(SHOW_MESSAGE, getString(R.string.mapping_recent_completed, keyEvent.getKeyCode()));
+        mMapRecentApps = false;
         return true;
       }
-      return false;
+
+      String packageName = mSharedPreferences.getString(String.valueOf(keyEvent.getKeyCode()), null);
+      if (packageName == null) {
+        return false;
+      }
+      switch (packageName) {
+        case "back_key":
+          injectKeyEvent(KeyEvent.KEYCODE_BACK);
+          return true;
+        case "recent_apps":
+          openRecentApps();
+          return true;
+        default:
+          mContext.startActivity(mContext.getPackageManager().getLaunchIntentForPackage(packageName));
+          return true;
+      }
     }
   };
 
@@ -154,10 +167,15 @@ public class KeyInterceptorService extends Service {
     mClearKeyMapping = true;
   }
 
+  public void mapRecentApps() {
+    mMapRecentApps = true;
+  }
+
   public void cancel() {
     mNextAppMappingApplicationInfo = null;
     mMapBackKey = false;
     mClearKeyMapping = false;
+    mMapRecentApps = false;
   }
 
   public void isActivityVisible(boolean visible) {
@@ -180,6 +198,22 @@ public class KeyInterceptorService extends Service {
       runtime.exec(keyCommand);
     } catch (IOException e) {
       e.printStackTrace();
+    }
+  }
+
+  private void openRecentApps() {
+    try {
+      Class serviceManagerClass = Class.forName("android.os.ServiceManager");
+      Method getService = serviceManagerClass.getMethod("getService", String.class);
+      IBinder retbinder = (IBinder) getService.invoke(null, "statusbar");
+      Class statusBarClass = Class.forName(retbinder.getInterfaceDescriptor());
+      Object statusBarObject = statusBarClass.getClasses()[0]
+          .getMethod("asInterface", IBinder.class).invoke(null, retbinder);
+      Method toggleRecentApps = statusBarClass.getMethod("toggleRecentApps");
+      toggleRecentApps.setAccessible(true);
+      toggleRecentApps.invoke(statusBarObject);
+    } catch (Exception e) {
+      Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
     }
   }
 

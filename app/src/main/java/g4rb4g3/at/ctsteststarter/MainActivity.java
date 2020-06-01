@@ -157,6 +157,16 @@ public class MainActivity extends Activity {
         mShowAllApps = item.isChecked();
         new LoadApplications().execute();
         break;
+      case R.id.mi_map_recents:
+        mAlertDialog = new AlertDialog.Builder(this)
+            .setTitle(R.string.next_step)
+            .setMessage(R.string.long_press_map_recent)
+            .setNegativeButton(R.string.cancel, (dialog, which) -> mService.cancel())
+            .setCancelable(false)
+            .create();
+        mAlertDialog.show();
+        mService.mapRecentApps();
+        break;
     }
     return true;
   }
