@@ -29,6 +29,9 @@ public class KeyInterceptorService extends Service {
   public static final String PREFERENCES_NAME = "preferences";
 
   public static final int SHOW_MESSAGE = 1;
+  public static final int MAPPED_APP = 2;
+  public static final int UNMAPPED_APP = 3;
+
 
   private final IBinder mBinder = new KeyInterceptorBinder();
   private List<Handler> mRegisteredHandlers = new ArrayList<>();
@@ -60,13 +63,18 @@ public class KeyInterceptorService extends Service {
       if (mNextAppMappingApplicationInfo != null) {
         mSharedPreferences.edit().putString(String.valueOf(keyEvent.getKeyCode()), mNextAppMappingApplicationInfo.packageName).commit();
         notifyHandlers(SHOW_MESSAGE, getString(R.string.mapping_app_completed, keyEvent.getKeyCode(), mNextAppMappingApplicationInfo.name));
+        notifyHandlers(MAPPED_APP, mNextAppMappingApplicationInfo.packageName);
         mNextAppMappingApplicationInfo = null;
         return true;
       }
 
       if (mClearKeyMapping) {
-        mSharedPreferences.edit().remove(String.valueOf(keyEvent.getKeyCode())).commit();
-        notifyHandlers(SHOW_MESSAGE, getString(R.string.mapping_cleared, keyEvent.getKeyCode()));
+        String packageName = mSharedPreferences.getString(String.valueOf(keyEvent.getKeyCode()), null);
+        if (packageName != null) {
+          notifyHandlers(UNMAPPED_APP, packageName);
+          mSharedPreferences.edit().remove(String.valueOf(keyEvent.getKeyCode())).commit();
+          notifyHandlers(SHOW_MESSAGE, getString(R.string.mapping_cleared, keyEvent.getKeyCode()));
+        }
         mClearKeyMapping = false;
         return true;
       }

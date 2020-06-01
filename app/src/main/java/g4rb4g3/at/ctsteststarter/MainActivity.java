@@ -17,6 +17,7 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.os.RemoteException;
+import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewConfiguration;
@@ -31,14 +32,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static g4rb4g3.at.ctsteststarter.KeyInterceptorService.MAPPED_APP;
 import static g4rb4g3.at.ctsteststarter.KeyInterceptorService.PREFERENCES_NAME;
 import static g4rb4g3.at.ctsteststarter.KeyInterceptorService.SHOW_MESSAGE;
+import static g4rb4g3.at.ctsteststarter.KeyInterceptorService.UNMAPPED_APP;
 
 public class MainActivity extends Activity {
   private boolean mBound = false;
   private KeyInterceptorService mService;
   private PackageManager mPackageManager = null;
-  private List<LaunchableApplicationInfo> mApplist = null;
   private ApplicationAdapter mListAdapter = null;
   private GridView mGvAppList;
   private AlertDialog mAlertDialog;
@@ -55,6 +57,12 @@ public class MainActivity extends Activity {
           if (mAlertDialog != null && mAlertDialog.isShowing()) {
             mAlertDialog.dismiss();
           }
+          break;
+        case MAPPED_APP:
+          mListAdapter.setKeyMapped(msg.obj.toString(), true);
+          break;
+        case UNMAPPED_APP:
+          mListAdapter.setKeyMapped(msg.obj.toString(), false);
           break;
       }
     }
@@ -89,7 +97,7 @@ public class MainActivity extends Activity {
 
     mGvAppList = findViewById(R.id.gv_all_apps);
     mGvAppList.setOnItemClickListener((parent, view, position, id) -> {
-      LaunchableApplicationInfo info = mApplist.get(position);
+      LaunchableApplicationInfo info = mListAdapter.getItem(position);
       showAppOptions(info, position);
     });
 
@@ -185,7 +193,7 @@ public class MainActivity extends Activity {
     }
   }
 
-  private void mapAppToKey(final LaunchableApplicationInfo info) {
+  public void mapAppToKey(final LaunchableApplicationInfo info) {
     if (!info.isLaunchable) {
       Toast.makeText(this, R.string.not_assignable, Toast.LENGTH_SHORT).show();
       return;
@@ -203,7 +211,10 @@ public class MainActivity extends Activity {
   private void showAppOptions(final LaunchableApplicationInfo info, final int position) {
     final ArrayAdapter<String> items = new ArrayAdapter<>(this, android.R.layout.simple_selectable_list_item);
     if (info.isLaunchable) {
-      items.addAll(getString(R.string.map_key), getString(R.string.launch));
+      if (!info.isKeyMapped) {
+        items.add(getString(R.string.map_key));
+      }
+      items.add(getString(R.string.launch));
     }
     items.addAll(getString(R.string.clear_cache), getString(R.string.clear_data), getString(R.string.force_stop));
     if (!info.isSystemApp) {
@@ -211,6 +222,7 @@ public class MainActivity extends Activity {
     }
     new AlertDialog.Builder(this)
         .setTitle(info.name)
+        .setIcon(info.loadIcon(mPackageManager))
         .setNegativeButton(R.string.cancel, (dialog, which) -> dialog.dismiss())
         .setAdapter(items, (dialog, which) -> {
           switch (contextOptions.get(items.getItem(which))) {
@@ -220,7 +232,7 @@ public class MainActivity extends Activity {
             case R.string.uninstall:
               try {
                 ProcessExecutor.executeRootCommand("pm uninstall " + info.packageName);
-                mApplist.remove(position);
+                mListAdapter.remove(info);
                 mListAdapter.notifyDataSetChanged();
 
                 SharedPreferences sharedPreferences = getSharedPreferences(PREFERENCES_NAME, MODE_PRIVATE);
@@ -277,10 +289,8 @@ public class MainActivity extends Activity {
 
     @Override
     protected Void doInBackground(Void... params) {
-      mApplist = checkForLaunchIntent(mPackageManager.getInstalledApplications(PackageManager.GET_META_DATA));
-      mListAdapter = new ApplicationAdapter(MainActivity.this,
-          R.layout.app_list_item, mApplist);
-
+      List<LaunchableApplicationInfo> appList = checkForLaunchIntent(mPackageManager.getInstalledApplications(PackageManager.GET_META_DATA));
+      mListAdapter = new ApplicationAdapter(MainActivity.this, R.layout.app_list_item, appList);
       return null;
     }
 
@@ -303,6 +313,13 @@ public class MainActivity extends Activity {
     }
 
     private List<LaunchableApplicationInfo> checkForLaunchIntent(List<ApplicationInfo> list) {
+      List<String> mappedApps = new ArrayList<>();
+      Map<String, ?> preferences = getSharedPreferences(PREFERENCES_NAME, MODE_PRIVATE).getAll();
+      for (Map.Entry<String, ?> entry : preferences.entrySet()) {
+        if (TextUtils.isDigitsOnly(entry.getKey())) {
+          mappedApps.add(entry.getValue().toString());
+        }
+      }
       String ownPackageName = getPackageName();
       ArrayList<LaunchableApplicationInfo> applist = new ArrayList<>();
       for (ApplicationInfo info : list) {
@@ -312,6 +329,7 @@ public class MainActivity extends Activity {
             if (!mShowAllApps && !applicationInfo.isLaunchable) {
               continue;
             }
+            applicationInfo.isKeyMapped = mappedApps.contains(applicationInfo.packageName);
             String appLabel = applicationInfo.loadLabel(mPackageManager).toString();
             applicationInfo.name = appLabel == null ? "" : appLabel;
             applist.add(applicationInfo);
