@@ -10,6 +10,8 @@ Allows you to map hardware keys to custom apps and manage apps. <br />
 * Force stop app
 * Uninstall app
 
+**Long press settings (gearwheel) button to launch the app. Before launching it the first time push the settings button shortly and long press it afterwards. This is only required after installing the app for the first time.<br />**
+
 ![Screenshot](doc/screenshot.png) <br />
 Checkbox for list item will show you if you have mapped a key already.
 
