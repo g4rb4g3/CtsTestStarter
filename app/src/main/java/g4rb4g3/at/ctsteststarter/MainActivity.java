@@ -221,7 +221,7 @@ public class MainActivity extends Activity {
       items.add(getString(R.string.uninstall));
     }
     new AlertDialog.Builder(this)
-        .setTitle(info.name)
+        .setTitle(info.name + " " + info.version)
         .setIcon(info.loadIcon(mPackageManager))
         .setNegativeButton(R.string.cancel, (dialog, which) -> dialog.dismiss())
         .setAdapter(items, (dialog, which) -> {
@@ -289,7 +289,7 @@ public class MainActivity extends Activity {
 
     @Override
     protected Void doInBackground(Void... params) {
-      List<LaunchableApplicationInfo> appList = checkForLaunchIntent(mPackageManager.getInstalledApplications(PackageManager.GET_META_DATA));
+      List<LaunchableApplicationInfo> appList = checkForLaunchIntent(mPackageManager.getInstalledApplications(PackageManager.GET_META_DATA), MainActivity.this);
       mListAdapter = new ApplicationAdapter(MainActivity.this, R.layout.app_list_item, appList);
       return null;
     }
@@ -312,7 +312,7 @@ public class MainActivity extends Activity {
       super.onProgressUpdate(values);
     }
 
-    private List<LaunchableApplicationInfo> checkForLaunchIntent(List<ApplicationInfo> list) {
+    private List<LaunchableApplicationInfo> checkForLaunchIntent(List<ApplicationInfo> list, Context context) {
       List<String> mappedApps = new ArrayList<>();
       Map<String, ?> preferences = getSharedPreferences(PREFERENCES_NAME, MODE_PRIVATE).getAll();
       for (Map.Entry<String, ?> entry : preferences.entrySet()) {
@@ -325,7 +325,7 @@ public class MainActivity extends Activity {
       for (ApplicationInfo info : list) {
         try {
           if (!ownPackageName.equals(info.packageName)) {
-            LaunchableApplicationInfo applicationInfo = new LaunchableApplicationInfo(info, mPackageManager.getLaunchIntentForPackage(info.packageName) != null);
+            LaunchableApplicationInfo applicationInfo = new LaunchableApplicationInfo(info, mPackageManager.getLaunchIntentForPackage(info.packageName) != null, context);
             if (!mShowAllApps && !applicationInfo.isLaunchable) {
               continue;
             }
