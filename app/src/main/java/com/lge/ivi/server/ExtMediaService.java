@@ -143,6 +143,11 @@ public class ExtMediaService extends IExtMediaManager.Stub {
   }
 
   @Override
+  public boolean removeFileInUsb(String s) throws RemoteException {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public boolean writeFileInSd(String s, String s1) throws RemoteException {
     throw new UnsupportedOperationException();
   }

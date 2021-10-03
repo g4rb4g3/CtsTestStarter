@@ -10,3 +10,6 @@ public class BroadcastsReceiver extends BroadcastReceiver {
     context.startService(new Intent(context, KeyInterceptorService.class));
   }
 }
+
+
+

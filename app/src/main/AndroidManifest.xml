@@ -21,6 +21,7 @@
 
         <receiver
             android:name=".BroadcastsReceiver"
+            android:enabled="true"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
@@ -28,9 +29,25 @@
             </intent-filter>
         </receiver>
 
+        <receiver
+            android:name=".ServiceRestartBroadcastReceiver"
+            android:enabled="true"
+            android:exported="true"
+            android:label="RestartServiceWhenStopped" />
+
         <service
             android:name=".KeyInterceptorService"
+            android:enabled="true"
             android:exported="true" />
+
+        <receiver
+            android:name="EVButtonReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter android:priority="2147483647">
+                <action android:name="com.lge.ivi.action.KEY_EV" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

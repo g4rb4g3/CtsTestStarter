@@ -1,0 +1,30 @@
+<resources>
+    <string name="app_name">App Manager</string>
+    <string name="app_name_version">App Manager %1$s</string>
+    <string name="map_key">Hosszú vagy dupla billentyű hozzárendelés</string>
+    <string name="clear_mapping">Hozzárendelés törlése</string>
+    <string name="map_back_key">Vissza gomb hozzárenelése</string>
+    <string name="how_to">Hogyan</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Mégsem</string>
+    <string name="press_to_map_app">Hosszú vagy dupla nyomás a(z) \"%1$s\" alkalmazáshoz rendeléshez.</string>
+    <string name="press_clear_mapping">Hosszú vagy dupla nyomás a hozzárendelés törléséhez.</string>
+    <string name="press_map_back">Hosszú vagy dupla nyomás a "vissza gomb" hozzárendeléséhez.</string>
+    <string name="press_map_recent">Hosszú vagy dupla nyomás a "legutóbbi alkalmazások" menü hozzárendeléséhez.</string>
+    <string name="loading_applist">Alkalmazás adatok betöltése…</string>
+    <string name="next_step">Következő lépés</string>
+    <string name="mapping_app_completed">A %1$s billentyűkód hozzárendelve a %2$s alkalmazáshoz.</string>
+    <string name="mapping_app_aborted">A hozzárendelés a %1$s apphoz megszakítva."</string>
+    <string name="mapping_cleared">A hozzárendelés a %1$s billentyűkódhoz törölve.</string>
+    <string name="mapping_back_completed">A %1$s hozzárendelve a vissza gombhoz.</string>
+    <string name="mapping_recent_completed">A %1$s hozzárendelve a "legutóbbi alkalmazások" menühöz.</string>
+    <string name="settings_cannot_be_mapped">A beállítások gomb nem hozzárendelhető.</string>
+    <string name="launch">Indítás</string>
+    <string name="uninstall">Eltávolítás</string>
+    <string name="show_all_apps">Az összes alkalmazás mutatása</string>
+    <string name="not_assignable">Az alkalmazás nem hozzárendelhető, mert nincs futtatható célja.</string>
+    <string name="clear_cache">Gyorsítótár törlése</string>
+    <string name="clear_data">Adatok törlése</string>
+    <string name="force_stop">Kényszerített leállítás</string>
+    <string name="map_recent_apps">"Legutóbbi alkalmazások" hozzárendelése</string>
+</resources>
