@@ -33,13 +33,21 @@
             android:name=".ServiceRestartBroadcastReceiver"
             android:enabled="true"
             android:exported="true"
-            android:label="RestartServiceWhenStopped">
-        </receiver>
+            android:label="RestartServiceWhenStopped" />
 
         <service
             android:name=".KeyInterceptorService"
             android:enabled="true"
             android:exported="true" />
+
+        <receiver
+            android:name="EVButtonReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter android:priority="2147483647">
+                <action android:name="com.lge.ivi.action.KEY_EV" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

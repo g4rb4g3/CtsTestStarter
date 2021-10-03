@@ -38,6 +38,8 @@ import static g4rb4g3.at.ctsteststarter.KeyInterceptorService.SHOW_MESSAGE;
 import static g4rb4g3.at.ctsteststarter.KeyInterceptorService.UNMAPPED_APP;
 
 public class MainActivity extends Activity {
+    private static final int CANCEL_DELAY = 2500;
+
     private boolean mBound = false;
     private KeyInterceptorService mService;
     private PackageManager mPackageManager = null;
@@ -46,9 +48,9 @@ public class MainActivity extends Activity {
     private AlertDialog mAlertDialog;
     private boolean mShowAllApps = false;
 
-    private Map<String, Integer> contextOptions = new HashMap<>();
+    private final Map<String, Integer> contextOptions = new HashMap<>();
 
-    private Handler mHandler = new Handler(Looper.getMainLooper()) {
+    private final Handler mHandler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what) {
@@ -68,7 +70,7 @@ public class MainActivity extends Activity {
         }
     };
 
-    private ServiceConnection mServiceConnection = new ServiceConnection() {
+    private final ServiceConnection mServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             KeyInterceptorService.KeyInterceptorBinder binder = (KeyInterceptorService.KeyInterceptorBinder) service;
@@ -76,13 +78,18 @@ public class MainActivity extends Activity {
             mBound = true;
 
             mService.registerHandler(mHandler);
-            mService.isActivityVisible(true);
+            mService.setActivityVisible(true);
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
             mBound = false;
         }
+    };
+
+    private final Handler mCancelHandler = new Handler(Looper.getMainLooper());
+    private final Runnable mCancelRunnable = () -> {
+        mService.cancel();
     };
 
     @Override
@@ -107,7 +114,6 @@ public class MainActivity extends Activity {
         contextOptions.put(getString(R.string.uninstall), R.string.uninstall);
         contextOptions.put(getString(R.string.force_stop), R.string.force_stop);
         contextOptions.put(getString(R.string.map_key), R.string.map_key);
-        contextOptions.put(getString(R.string.map_doublekey), R.string.map_doublekey);
     }
 
     private void enableDotsMenu() {
@@ -127,8 +133,8 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        mCancelHandler.removeCallbacks(mCancelRunnable);
         bindService(new Intent(this, KeyInterceptorService.class), mServiceConnection, Context.BIND_AUTO_CREATE);
-
         new LoadApplications().execute();
     }
 
@@ -144,7 +150,7 @@ public class MainActivity extends Activity {
             case R.id.mi_clear_mapping:
                 mAlertDialog = new AlertDialog.Builder(this)
                         .setTitle(R.string.next_step)
-                        .setMessage(R.string.long_press_clear_mapping)
+                        .setMessage(R.string.press_clear_mapping)
                         .setNegativeButton(R.string.cancel, (dialog, which) -> mService.cancel())
                         .setCancelable(false)
                         .create();
@@ -154,7 +160,7 @@ public class MainActivity extends Activity {
             case R.id.mi_map_back_key:
                 mAlertDialog = new AlertDialog.Builder(this)
                         .setTitle(R.string.next_step)
-                        .setMessage(R.string.long_press_map_back)
+                        .setMessage(R.string.press_map_back)
                         .setNegativeButton(R.string.cancel, (dialog, which) -> mService.cancel())
                         .setCancelable(false)
                         .create();
@@ -169,7 +175,7 @@ public class MainActivity extends Activity {
             case R.id.mi_map_recents:
                 mAlertDialog = new AlertDialog.Builder(this)
                         .setTitle(R.string.next_step)
-                        .setMessage(R.string.long_press_map_recent)
+                        .setMessage(R.string.press_map_recent)
                         .setNegativeButton(R.string.cancel, (dialog, which) -> mService.cancel())
                         .setCancelable(false)
                         .create();
@@ -183,9 +189,11 @@ public class MainActivity extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
+
+        mCancelHandler.postDelayed(mCancelRunnable, CANCEL_DELAY);
+
         if (mBound) {
-            mService.isActivityVisible(false);
-            mService.cancel();
+            mService.setActivityVisible(false);
             mService.unregisterHandler(mHandler);
             unbindService(mServiceConnection);
         }
@@ -194,19 +202,19 @@ public class MainActivity extends Activity {
         }
     }
 
-    public void mapAppToKey(final LaunchableApplicationInfo info, boolean doublePress) {
+    public void mapAppToKey(final LaunchableApplicationInfo info) {
         if (!info.isLaunchable) {
             Toast.makeText(this, R.string.not_assignable, Toast.LENGTH_SHORT).show();
             return;
         }
         mAlertDialog = new AlertDialog.Builder(this)
                 .setTitle(R.string.next_step)
-                .setMessage(getString(R.string.long_press_to_map_app, info.name))
+                .setMessage(getString(R.string.press_to_map_app, info.name))
                 .setNegativeButton(R.string.cancel, (dialog, which) -> mService.cancel())
                 .setCancelable(false)
                 .create();
         mAlertDialog.show();
-        mService.mapAppToKey(info, doublePress);
+        mService.mapAppToKey(info);
     }
 
     private void showAppOptions(final LaunchableApplicationInfo info, final int position) {
@@ -214,7 +222,6 @@ public class MainActivity extends Activity {
         if (info.isLaunchable) {
             if (!info.isKeyMapped) {
                 items.add(getString(R.string.map_key));
-                items.add(getString(R.string.map_doublekey));
             }
             items.add(getString(R.string.launch));
         }
@@ -272,10 +279,7 @@ public class MainActivity extends Activity {
                             }
                             break;
                         case R.string.map_key:
-                            mapAppToKey(info, false);
-                            break;
-                        case R.string.map_doublekey:
-                            mapAppToKey(info, true);
+                            mapAppToKey(info);
                             break;
                     }
                 })

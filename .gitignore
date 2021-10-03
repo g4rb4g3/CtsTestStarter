@@ -12,4 +12,5 @@
 /captures
 .externalNativeBuild
 .cxx
+app/libs/com.lge.ivi.jar
 app/libs/com.lge.ivi_191209.jar
