@@ -1,4 +1,7 @@
 
+```diff
+- Abandonware! Since I sold my Ioniq a while back there is no more development going on here.
+```
 # App Manager
 Allows you to map hardware keys to custom apps and manage apps. <br />
 
